@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: canvass
+  name: canvass
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: canvass
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: canvass
+    spec:
+      containers:
+      - image: navdeephanspal/canvass:v1
+        name: k8s-django
+        args: ["./run_web.sh"]
+        imagePullPolicy: Always
+        ports:
+        - containerPort:8000
+        resources: {}
+status: {}
