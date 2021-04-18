@@ -1,0 +1,83 @@
+[admin@local-tst-001 k8s-django-rest-take-home]$ k get ns
+NAME              STATUS   AGE
+default           Active   2d13h
+ingress-nginx     Active   18h
+kube-node-lease   Active   2d13h
+kube-public       Active   2d13h
+kube-system       Active   2d13h
+nginx-ingress     Active   39h
+[admin@local-tst-001 k8s-django-rest-take-home]$ k get po -n ingress-nginx
+NAME                                        READY   STATUS      RESTARTS   AGE
+ingress-nginx-admission-create-l6r5h        0/1     Completed   0          18h
+ingress-nginx-admission-patch-5wj9z         0/1     Completed   0          18h
+ingress-nginx-controller-5d88495688-rlzzp   0/1     Pending     0          36m
+
+***************************************************************************************************************
+There was an issue in setting up ingress. The servive could not be exposed externally
+
+
+[admin@local-tst-001 k8s-django-rest-take-home]$ k describe po ingress-nginx-controller-5d88495688-rlzzp -n ingress-nginx
+Name:           ingress-nginx-controller-5d88495688-rlzzp
+Namespace:      ingress-nginx
+Priority:       0
+Node:           <none>
+Labels:         addonmanager.kubernetes.io/mode=Reconcile
+                app.kubernetes.io/component=controller
+                app.kubernetes.io/instance=ingress-nginx
+                app.kubernetes.io/name=ingress-nginx
+                gcp-auth-skip-secret=true
+                pod-template-hash=5d88495688
+Annotations:    <none>
+Status:         Pending
+IP:
+IPs:            <none>
+Controlled By:  ReplicaSet/ingress-nginx-controller-5d88495688
+Containers:
+  controller:
+    Image:       k8s.gcr.io/ingress-nginx/controller:v0.44.0@sha256:3dd0fac48073beaca2d67a78c746c7593f9c575168a17139a9955a82c63c4b9a
+    Ports:       80/TCP, 443/TCP, 8443/TCP
+    Host Ports:  80/TCP, 443/TCP, 0/TCP
+    Args:
+      /nginx-ingress-controller
+      --ingress-class=nginx
+      --configmap=$(POD_NAMESPACE)/ingress-nginx-controller
+      --report-node-internal-ip-address
+      --tcp-services-configmap=$(POD_NAMESPACE)/tcp-services
+      --udp-services-configmap=$(POD_NAMESPACE)/udp-services
+      --validating-webhook=:8443
+      --validating-webhook-certificate=/usr/local/certificates/cert
+      --validating-webhook-key=/usr/local/certificates/key
+    Requests:
+      cpu:      100m
+      memory:   90Mi
+    Liveness:   http-get http://:10254/healthz delay=10s timeout=1s period=10s #success=1 #failure=5
+    Readiness:  http-get http://:10254/healthz delay=10s timeout=1s period=10s #success=1 #failure=3
+    Environment:
+      POD_NAME:       ingress-nginx-controller-5d88495688-rlzzp (v1:metadata.name)
+      POD_NAMESPACE:  ingress-nginx (v1:metadata.namespace)
+      LD_PRELOAD:     /usr/local/lib/libmimalloc.so
+    Mounts:
+      /usr/local/certificates/ from webhook-cert (ro)
+      /var/run/secrets/kubernetes.io/serviceaccount from ingress-nginx-token-2qrj6 (ro)
+Conditions:
+  Type           Status
+  PodScheduled   False
+Volumes:
+  webhook-cert:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  ingress-nginx-admission
+    Optional:    false
+  ingress-nginx-token-2qrj6:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  ingress-nginx-token-2qrj6
+    Optional:    false
+QoS Class:       Burstable
+Node-Selectors:  <none>
+Tolerations:     node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                 node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type     Reason            Age                  From               Message
+  ----     ------            ----                 ----               -------
+  Warning  FailedScheduling  2m5s (x37 over 37m)  default-scheduler  0/1 nodes are available: 1 node(s) didn't have free ports for the requested pod ports.
+
+**************************************************************************
